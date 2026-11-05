@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#090912"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%231c1727' stroke='%23a78bfa'/%3E%3Cpath d='M20 5a12 12 0 1 0 7 19A11 11 0 0 1 20 5' fill='%23e4d8ec'/%3E%3C/svg%3E">
+<title>Nocturno — Reino da Lua Morta</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Unbounded:wght@500;600;700&display=swap');
+:root{color-scheme:dark;--ink:#090912;--paper:#e9e3ec;--muted:#878194;--violet:#a78bfa;--line:#30293a}*{box-sizing:border-box}body{margin:0;min-height:100svh;background:radial-gradient(ellipse at 50% 0%,#1e1930 0%,#100e19 46%,#090912 100%);color:var(--paper);font-family:'DM Mono',monospace;display:grid;place-items:center;padding:22px;overflow-x:hidden}.wrap{width:min(1080px,100%)}.topbar{display:flex;justify-content:space-between;align-items:center;margin:0 0 14px;padding:0 2px}.brand{display:flex;align-items:center;gap:12px}.sigil{width:35px;height:35px;border:1px solid #625477;border-radius:50%;display:grid;place-items:center;color:#c3aaff;font-size:19px;box-shadow:0 0 22px #8e62ff24}.brand h1{font:600 13px 'Unbounded',sans-serif;letter-spacing:.08em;margin:0}.brand small{display:block;color:#8f8799;font-size:9px;letter-spacing:.2em;margin-top:5px}.chapter{font-size:10px;color:#aca4b6;letter-spacing:.14em}.game-shell{position:relative;background:#0a0911;border:1px solid #473c54;border-radius:10px;padding:8px;box-shadow:0 24px 80px #0009,0 0 50px #8b5cf61a;overflow:hidden}.game-shell:before{content:'';position:absolute;inset:0;pointer-events:none;border:1px solid #c8b7ed12;border-radius:10px;z-index:2}canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated;background:#131322;border-radius:5px;touch-action:none}.footer{display:flex;justify-content:space-between;align-items:center;padding:13px 3px 0;color:#918a9c;font-size:10px;letter-spacing:.04em}.footer strong{color:#d5c9e6;font-weight:500}.controls{display:flex;gap:14px}.key{border:1px solid #514860;border-bottom-width:2px;border-radius:4px;padding:3px 6px;color:#ddd4e8;font-size:9px;margin:0 2px}.mobile-controls{display:none;position:absolute;bottom:15px;left:15px;right:15px;justify-content:space-between;pointer-events:none;z-index:3}.pad,.acts{display:flex;gap:8px;pointer-events:auto}.touch{border:1px solid #d5c3e566;background:#15111dbb;color:#f0eafa;width:48px;height:44px;border-radius:9px;font:18px 'DM Mono';backdrop-filter:blur(5px);touch-action:none;user-select:none}.touch:active{background:#7c3aedaa}.touch.action{width:55px;height:52px;font-size:11px;color:#d9c7ff}.sound{border:1px solid #443b4e;background:#17131e;color:#b9adc5;border-radius:5px;padding:6px 9px;font:10px 'DM Mono';cursor:pointer}.sound:hover{border-color:#9c80bb;color:#fff}.caption{font-size:10px;color:#716b7a;text-align:center;margin-top:11px}.caption em{color:#9e8daf;font-style:normal}@media(max-width:680px){body{padding:10px}.topbar{margin-bottom:8px}.chapter{display:none}.footer{font-size:9px}.controls{display:none}.mobile-controls{display:flex}.game-shell{padding:5px}.caption{margin-bottom:66px}}@media(min-width:681px){.mobile-controls{display:none!important}}
+</style>
+</head>
+<body><main class="wrap">
+<header class="topbar"><div class="brand"><div class="sigil">☾</div><div><h1>NOCTURNO</h1><small>REINO DA LUA MORTA</small></div></div><div class="chapter">CAPÍTULO I &nbsp;·&nbsp; O BOSQUE SEM AMANHECER</div><button class="sound" id="sound">♫ &nbsp; SOM: LIGADO</button></header>
+<section class="game-shell"><canvas id="game" width="320" height="180" aria-label="Jogo de plataforma Nocturno"></canvas><div class="mobile-controls"><div class="pad"><button class="touch" data-hold="left">←</button><button class="touch" data-hold="right">→</button></div><div class="acts"><button class="touch action" data-hold="burst">ECLIPSE</button><button class="touch action" data-hold="jump">PULAR</button></div></div></section>
+<footer class="footer"><span><strong>OBJETIVO</strong> &nbsp; Reúna 5 sigilos e alcance o portal.</span><span class="controls"><span><b class="key">A</b><b class="key">D</b> mover</span><span><b class="key">ESPAÇO</b> pular</span><span><b class="key">X</b> eclipse</span></span></footer><div class="caption">Uma aventura sombria original &nbsp;·&nbsp; <em>Arte em pixel, feita para jogar</em></div>
+</main>
+<script>
+(()=>{
+const c=document.querySelector('#game'),g=c.getContext('2d'),W=320,H=180;g.imageSmoothingEnabled=false;
+const keys={left:false,right:false,jump:false,burst:false};let state='title',tick=0,cam=0,shake=0,soundOn=true,audio;
+const world=2300,ground=153;
+const platforms=[{x:146,y:130,w:39},{x:237,y:111,w:39},{x:368,y:128,w:40},{x:468,y:105,w:48},{x:606,y:126,w:41},{x:710,y:106,w:49},{x:844,y:127,w:43},{x:943,y:103,w:45},{x:1085,y:126,w:46},{x:1195,y:104,w:43},{x:1320,y:128,w:44},{x:1425,y:104,w:48},{x:1552,y:127,w:44},{x:1658,y:105,w:49},{x:1794,y:125,w:45},{x:1900,y:104,w:43},{x:2020,y:127,w:45}];
+let player,enemies,sigils,particles,bursts,toast='',toastTime=0;
+function reset(){player={x:28,y:120,vx:0,vy:0,w:11,h:17,face:1,grounded:false,hp:3,energy:100,inv:0,anim:0,checkpoint:28};enemies=[{x:290,y:141,home:290,dir:1,hp:1,dead:0},{x:531,y:141,home:531,dir:-1,hp:1,dead:0},{x:772,y:141,home:772,dir:1,hp:1,dead:0},{x:1015,y:141,home:1015,dir:-1,hp:1,dead:0},{x:1277,y:141,home:1277,dir:1,hp:1,dead:0},{x:1510,y:141,home:1510,dir:-1,hp:1,dead:0},{x:1755,y:141,home:1755,dir:1,hp:1,dead:0},{x:1950,y:141,home:1950,dir:-1,hp:1,dead:0}];sigils=[{x:166,y:121,got:false},{x:385,y:119,got:false},{x:620,y:117,got:false},{x:857,y:118,got:false},{x:1100,y:117,got:false},{x:1340,y:119,got:false},{x:1572,y:118,got:false},{x:1810,y:116,got:false},{x:2040,y:117,got:false}];particles=[];bursts=[];cam=0;}
+reset();
+function rect(x,y,w,h,col){g.fillStyle=col;g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
+function text(s,x,y,size,color,align='left'){g.font=`${size}px "DM Mono",monospace`;g.textAlign=align;g.fillStyle=color;g.fillText(s,x,y)}
+function rand(n){return Math.abs(Math.sin(n*127.1+4.3)*43758.5)%1}
+function sfx(freq=180,dur=.08,type='sine'){if(!soundOn)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();let o=audio.createOscillator(),v=audio.createGain();o.type=type;o.frequency.value=freq;v.gain.setValueAtTime(.035,audio.currentTime);v.gain.exponentialRampToValueAtTime(.001,audio.currentTime+dur);o.connect(v);v.connect(audio.destination);o.start();o.stop(audio.currentTime+dur)}catch{}}
+function start(){if(state==='title'||state==='dead'||state==='win'){reset();state='play';sfx(250,.12)} }
+function emit(x,y,n,col,power=2){for(let i=0;i<n;i++)particles.push({x,y,vx:(Math.random()-.5)*power*2,vy:(Math.random()-.8)*power,life:18+Math.random()*18,max:36,col,size:1+Math.random()*2})}
+function hurt(){if(player.inv>0)return;player.hp--;player.inv=80;player.vy=-3;player.vx=-player.face*2;shake=6;emit(player.x+5,player.y+8,8,'#9b2948',1.5);sfx(100,.16,'sawtooth');if(player.hp<=0){state='dead';toast='A noite ainda não terminou.'}}
+function killEnemy(e){if(e.dead)return;e.dead=1;emit(e.x+7,e.y+5,16,'#a93250',2.2);emit(e.x+7,e.y+5,7,'#3a1839',1.5);player.energy=Math.min(100,player.energy+24);shake=3;sfx(115,.17,'square')}
+function eclipse(){if(player.energy<35||state!=='play')return;player.energy-=35;bursts.push({x:player.x+5,y:player.y+8,r:1,max:50});sfx(80,.22,'sawtooth');for(let e of enemies)if(!e.dead&&Math.abs(e.x+7-(player.x+5))<51&&Math.abs(e.y-player.y)<34)killEnemy(e);}
+function keydown(e){const k=e.key.toLowerCase();if([' ','arrowleft','arrowright','arrowup'].includes(k))e.preventDefault();if(k==='a'||k==='arrowleft')keys.left=true;if(k==='d'||k==='arrowright')keys.right=true;if(k===' '||k==='w'||k==='arrowup'){if(!keys.jump&&state==='play'&&player.grounded){player.vy=-5.4;player.grounded=false;sfx(330,.07)}keys.jump=true}if(k==='x'||k==='j'){if(!keys.burst){if(state!=='play')start();else eclipse()}keys.burst=true}if(k==='enter'||k===' '&&state!=='play')start();if(k==='r'&&(state==='dead'||state==='win'))start()}
+function keyup(e){const k=e.key.toLowerCase();if(k==='a'||k==='arrowleft')keys.left=false;if(k==='d'||k==='arrowright')keys.right=false;if(k===' '||k==='w'||k==='arrowup')keys.jump=false;if(k==='x'||k==='j')keys.burst=false}
+addEventListener('keydown',keydown);addEventListener('keyup',keyup);addEventListener('blur',()=>Object.keys(keys).forEach(k=>keys[k]=false));
+document.querySelectorAll('[data-hold]').forEach(b=>{const key=b.dataset.hold;const down=e=>{e.preventDefault();if(key==='burst'){if(state!=='play')start();else if(!keys.burst)eclipse()}if(key==='jump'&&state==='play'&&player.grounded){player.vy=-5.4;player.grounded=false;sfx(330,.07)}keys[key]=true},up=e=>{e.preventDefault();keys[key]=false};b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);b.addEventListener('pointerleave',up);b.addEventListener('pointercancel',up)});
+document.querySelector('#sound').onclick=()=>{soundOn=!soundOn;document.querySelector('#sound').innerHTML=soundOn?'♫ &nbsp; SOM: LIGADO':'♫ &nbsp; SOM: MUDO';if(soundOn)sfx(280,.08)};
+c.addEventListener('pointerdown',()=>{if(state!=='play')start()});
+function update(){tick++;if(shake>0)shake*=.78;if(toastTime>0)toastTime--;
+if(state==='play'){
+const p=player;p.anim++;let dx=(keys.right?1:0)-(keys.left?1:0);if(dx){p.vx+=dx*.28;p.face=dx>0?1:-1}else p.vx*=.78;p.vx=Math.max(-2.1,Math.min(2.1,p.vx));p.x=Math.max(0,Math.min(world-14,p.x+p.vx));p.vy=Math.min(5.5,p.vy+.25);let prev=p.y;p.y+=p.vy;p.grounded=false;
+if(p.y+p.h>=ground){p.y=ground-p.h;p.vy=0;p.grounded=true}
+for(const q of platforms){if(p.x+p.w>q.x&&p.x<q.x+q.w&&prev+p.h<=q.y&&p.y+p.h>=q.y&&p.vy>=0){p.y=q.y-p.h;p.vy=0;p.grounded=true}}
+if(p.y>H+20){hurt();p.y=ground-p.h;p.x=p.checkpoint}
+if(p.inv>0)p.inv--;
+for(const e of enemies){if(e.dead){e.dead++;continue}e.x+=e.dir*.42;if(Math.abs(e.x-e.home)>24)e.dir*=-1;e.y=ground-12;
+if(p.x+p.w>e.x+2&&p.x<e.x+12&&p.y+p.h>e.y+2&&p.y<e.y+12){if(p.vy>1&&p.y+p.h<e.y+9){killEnemy(e);p.vy=-3.2}else hurt()}}
+for(const s of sigils){if(s.got)continue;if(Math.abs((p.x+5)-s.x)<11&&Math.abs((p.y+8)-s.y)<13){s.got=true;p.energy=Math.min(100,p.energy+12);emit(s.x,s.y,12,'#e4cb76',1.5);sfx(540,.11);toast='Fragmento lunar recolhido';toastTime=80}}
+if(p.x>world-110&&sigils.filter(s=>s.got).length>=5){state='win';sfx(480,.35)}
+for(const b of bursts){b.r+=5;if(b.r>=b.max)b.done=true}bursts=bursts.filter(b=>!b.done);
+for(const z of particles){z.x+=z.vx;z.y+=z.vy;z.vy+=.12;z.life--}particles=particles.filter(z=>z.life>0);
+cam=Math.max(0,Math.min(world-W,p.x-W*.42));
+} }
+function sky(){let grad=g.createLinearGradient(0,0,0,H);grad.addColorStop(0,'#101427');grad.addColorStop(.58,'#262038');grad.addColorStop(1,'#563447');g.fillStyle=grad;g.fillRect(0,0,W,H);
+// distant moons and stars
+for(let i=0;i<58;i++){let x=(i*67.7-cam*.08%W+W*3)%W,y=9+rand(i)*78;rect(x,y,rand(i+8)>.8?2:1,1,`rgba(230,220,246,${.25+rand(i+2)*.55})`)}
+g.fillStyle='#ded1c3';g.beginPath();g.arc(258,37,18,0,Math.PI*2);g.fill();g.fillStyle='#a8a2b4';g.beginPath();g.arc(264,33,16,0,Math.PI*2);g.fill();g.fillStyle='#ded1c3';g.beginPath();g.arc(254,28,2,0,7);g.fill();
+// mountain and layered castle silhouettes
+for(let layer=0;layer<3;layer++){let base=105+layer*11;for(let i=-1;i<7;i++){let x=i*68-((cam*(.12+layer*.10))%68);let h=28+rand(i+layer*30)*35;rect(x,base-h,35,h,'#201e31');rect(x+5,base-h-5,3,7,'#201e31');rect(x+26,base-h-8,3,10,'#201e31');if(layer===1){rect(x+14,base-h+15,2,7,'#88728e55');rect(x+23,base-h+28,2,5,'#bc718355')}}}
+// floating wisps
+for(let i=0;i<7;i++){let x=(i*77-cam*.2+tick*.12)%350-15,y=49+rand(i+71)*47;rect(x,y,8,1,'#c7a6ce22');rect(x+2,y-2,4,1,'#c7a6ce18')}
+}
+function scenery(){// ruined gothic arches along path
+for(let i=0;i<8;i++){let wx=90+i*290,x=wx-cam*.78;if(x<-70||x>W+30)continue;rect(x,105,4,48,'#292438');rect(x+5,102,3,51,'#343044');rect(x+30,104,4,49,'#292438');rect(x+25,101,4,52,'#343044');rect(x+3,101,29,4,'#352f44');rect(x+8,105,20,2,'#766279');rect(x+10,116,2,7,'#9f657d');rect(x+22,117,2,6,'#ad7580');rect(x+13,113,8,1,'#463044')}
+// ground tiles
+rect(0,ground,W,H-ground,'#24202d');rect(0,ground,W,3,'#9b7387');rect(0,ground+3,W,2,'#583b50');for(let x=-(cam%16);x<W;x+=16){rect(x,ground+5,1,H-ground,'#342b38');rect(x+2,ground+8,5,1,'#443440');rect(x+9,ground+18,5,1,'#302938');rect(x,ground+27,16,1,'#302938')}
+// thorn shrubs & candle tombs
+for(let i=0;i<15;i++){let wx=i*157+40,x=wx-cam;if(x<-20||x>W+20)continue;rect(x,ground-7,2,7,'#1b1924');rect(x+2,ground-5,2,5,'#302338');rect(x+4,ground-9,2,9,'#211a2a');rect(x+8,ground-4,2,4,'#302338');if(i%3===0){rect(x+24,ground-14,6,14,'#5a4a59');rect(x+22,ground-17,10,3,'#817083');rect(x+26,ground-22,2,5,'#db9583');rect(x+25,ground-24,4,2,'#ffb78e')}}
+for(const q of platforms){let x=q.x-cam;if(x<-60||x>W+20)continue;rect(x,q.y,q.w,4,'#514056');rect(x+1,q.y+1,q.w-2,2,'#9a7a91');rect(x,q.y+4,q.w,3,'#332a3c');for(let t=7;t<q.w;t+=10)rect(x+t,q.y+6,1,3,'#211e2c');rect(x+4,q.y-2,3,2,'#b98a9c')}
+}
+function drawPlayer(){let p=player,x=Math.round(p.x-cam),y=Math.round(p.y);if(p.inv>0&&tick%6<3)return;let f=p.face;g.save();if(f<0){g.translate(x+11,0);g.scale(-1,1);x=0}else x=x;
+// shadow
+rect(x+1,y+16,10,2,'#0b0a12aa');let walk=p.grounded&&Math.abs(p.vx)>.2&&Math.floor(p.anim/5)%2;
+// boots and coat
+rect(x+1,y+13,4,3,'#211b2c');rect(x+6,y+13+(walk?1:0),4,3,'#211b2c');rect(x,y+15,5,2,'#79607e');rect(x+6,y+15,5,2,'#79607e');rect(x+2,y+7,7,8,'#282032');rect(x+1,y+9,9,4,'#493149');rect(x+3,y+8,5,5,'#171520');rect(x+3,y+13,2,3,'#a33755');rect(x+7,y+9,1,5,'#bc9aac');
+// head, hair, cap
+rect(x+2,y+2,7,7,'#d7b6a7');rect(x+1,y+1,8,3,'#17151e');rect(x+1,y+3,3,4,'#211a2b');rect(x+7,y+4,3,4,'#211a2b');rect(x+5,y+5,2,1,'#d96783');rect(x+1,y,8,2,'#3a2745');rect(x,y+1,7,1,'#6f496f');rect(x+8,y+1,3,2,'#201a2a');rect(x+3,y-1,4,2,'#25202e');rect(x+1,y+10,2,4,'#b799a6');
+g.restore();
+}
+function drawEnemy(e){if(e.dead)return;let x=Math.round(e.x-cam),y=Math.round(e.y),bob=Math.floor(Math.sin(tick*.12+e.home)*1.5);rect(x+2,y+10,10,2,'#17121e');rect(x+1,y+5+bob,12,6,'#40263d');rect(x+3,y+2+bob,8,5,'#533047');rect(x+4,y+bob,6,3,'#694054');rect(x+4,y+6+bob,2,2,'#ff5375');rect(x+9,y+6+bob,2,2,'#ff5375');rect(x+5,y+6+bob,1,1,'#fff0dd');rect(x+1,y+10,3,2,'#302136');rect(x+10,y+10,3,2,'#302136')}
+function draw(){g.save();if(shake>.3)g.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);sky();scenery();
+// doorway at the far end
+let gate=world-76-cam;if(gate>-50&&gate<350){rect(gate,111,34,42,'#171321');rect(gate-3,108,40,4,'#786080');rect(gate,113,34,3,'#ad89a2');rect(gate+4,119,26,34,'#63436a');rect(gate+7,121,20,32,'#160f20');rect(gate+9,124,16,26,'#794da4');rect(gate+12,126,10,22,'#bb75d0');rect(gate+14,127,4,20,'#e7b5ee');rect(gate+11,111,2,4,'#eac88a');rect(gate+21,111,2,4,'#eac88a')}
+for(const s of sigils)if(!s.got){let x=s.x-cam,y=s.y+Math.sin(tick*.1+s.x)*2;rect(x-4,y-5,8,10,'#7c5c37');rect(x-2,y-7,4,14,'#e2cb78');rect(x-1,y-4,2,8,'#fff0b0');rect(x-5,y-1,10,2,'#b98c4d');rect(x-1,y-9,2,2,'#fff2c3')}
+for(const e of enemies)drawEnemy(e);drawPlayer();
+for(const b of bursts){let rr=Math.floor(b.r);g.strokeStyle='#a76cec';g.lineWidth=2;g.beginPath();g.arc(b.x-cam,b.y,rr,0,Math.PI*2);g.stroke();g.strokeStyle='#e7bbff77';g.lineWidth=1;g.beginPath();g.arc(b.x-cam,b.y,rr*.72,0,Math.PI*2);g.stroke()}
+for(const z of particles){let a=z.life/z.max;g.globalAlpha=Math.min(1,a*1.5);rect(z.x-cam,z.y,z.size,z.size,z.col)}g.globalAlpha=1;
+// HUD top
+rect(5,5,107,21,'#100e1acb');rect(5,5,107,1,'#756283');text('NOCTURNO',10,14,6,'#e8ddec');for(let i=0;i<3;i++){rect(10+i*9,17,6,2,i<player.hp?'#d95672':'#493844');rect(11+i*9,16,4,3,i<player.hp?'#fa8294':'#493844')}
+text('ECLIPSE',47,21,5,'#c8b6d5');rect(69,17,35,3,'#342b3b');rect(69,17,Math.floor(35*player.energy/100),3,'#9f70d5');rect(69,17,Math.floor(35*player.energy/100),1,'#e2c1ff');
+rect(261,5,54,18,'#100e1acb');rect(261,5,54,1,'#756283');let count=sigils.filter(s=>s.got).length;text('SIGILOS',267,13,5,'#b9aec3');text(`${count}/5`,307,17,8,count>=5?'#edcf83':'#ede7f0','right');
+if(toastTime>0){rect(94,31,132,14,'#13101ecb');text(toast,160,40,6,'#ebd4f1','center')}
+if(state!=='play'){rect(0,0,W,H,'#0808109c');if(state==='title'){text('O BOSQUE SEM AMANHECER',160,48,7,'#d5c4da','center');text('A LUA ESQUECEU SEU NOME.',160,60,6,'#a89bad','center');text('RECOLHA OS SIGILOS. DESPERTE O PORTAL.',160,72,6,'#b7a5bd','center');rect(98,91,124,22,'#3c294a');rect(99,92,122,1,'#c8a4d5');text('▶  COMEÇAR A JOGAR',160,105,7,'#f1e4f2','center');text('APERTE ESPAÇO / ENTER / TOQUE',160,126,5,'#9d8ca7','center');text('X  LANÇA O ECLIPSE SOMBRIO',160,137,5,'#c4a4dc','center')}else if(state==='dead'){text('A NOITE TE ENGOLIU',160,68,10,'#f0d7e2','center');text('APERTE R OU TOQUE PARA TENTAR DE NOVO',160,91,6,'#c3afc7','center')}else{text('O PORTAL SE ABRIU',160,65,11,'#edd7f2','center');text('A LUA LEMBRA SEU NOME.',160,81,7,'#d6c1de','center');text(`${count} FRAGMENTOS LUNARES REUNIDOS`,160,96,6,'#e6d18b','center');text('APERTE R PARA JOGAR DE NOVO',160,116,6,'#c3afc7','center')}}
+g.restore()}
+function frame(){update();draw();requestAnimationFrame(frame)}frame();
+})();
+</script></body></html>
